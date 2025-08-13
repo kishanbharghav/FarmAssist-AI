@@ -14,8 +14,8 @@ import farmingBg from "@/assets/farming-bg.jpg";
 import cropsPatternBg from "@/assets/crops-pattern-bg.jpg";
 import farmingTexture from "@/assets/farming-texture.jpg";
 import ApiKeyForm from "./ApiKeyForm";
-import WeatherWidget from "./WeatherWidget";
-import SuggestedQuestions from "./SuggestedQuestions";
+import WeatherBubble from "./WeatherBubble";
+import SuggestionClouds from "./SuggestionClouds";
 import { WeatherService, getCropPrices } from "@/services/weatherService";
 import { checkCropCompatibility, getRecommendedCrops, CompatibilityResult } from "@/services/cropCompatibility";
 
@@ -821,22 +821,10 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
     >
       <div className="absolute inset-0 bg-background/80"></div>
       <div className="relative z-10">
-        {/* Weather Section */}
-        <div className="p-4">
-          <WeatherWidget 
-            weatherService={weatherService} 
-            location={farmerProfile.location || ""}
-          />
-        </div>
+        {/* Floating Suggestion Clouds */}
+        <SuggestionClouds onQuestionClick={handleSuggestedQuestionClick} />
 
-        {/* Suggested Questions Section */}
-        {messages.length === 0 && (
-          <div className="p-4 pt-0">
-            <SuggestedQuestions onQuestionClick={handleSuggestedQuestionClick} />
-          </div>
-        )}
-
-        <div className="grid lg:grid-cols-4 min-h-[calc(100vh-200px)]">
+        <div className="grid lg:grid-cols-4 min-h-screen">
           {/* Sidebar with farmer profile and suggestions */}
           <div 
             className="lg:col-span-1 border-r bg-forest-green-light/60 backdrop-blur-sm p-4"
@@ -878,6 +866,12 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
                   )}
                 </CardContent>
                 </Card>
+                
+                {/* Weather Bubble */}
+                <WeatherBubble 
+                  weatherService={weatherService} 
+                  location={farmerProfile.location || ""}
+                />
                 
                 <Card>
                   <CardHeader>
