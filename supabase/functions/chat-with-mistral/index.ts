@@ -36,7 +36,7 @@ Provide practical, actionable farming advice tailored to this farmer's specific 
         'X-Title': 'Farming Assistant',
       },
       body: JSON.stringify({
-        model: 'mistralai/mistral-7b-instruct',
+        model: 'deepseek/deepseek-chat-v3-0324:free',
         messages: [
           {
             role: 'system',
