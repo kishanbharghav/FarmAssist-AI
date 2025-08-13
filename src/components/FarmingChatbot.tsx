@@ -8,9 +8,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { MessageCircle, Sprout, Wheat, Tractor, Send, User, Bot, ArrowRight } from "lucide-react";
+import { MessageCircle, Sprout, Wheat, Tractor, Send, User, Bot, ArrowRight, Cloud, TrendingUp } from "lucide-react";
 import heroImage from "@/assets/farming-hero.jpg";
 import ApiKeyForm from "./ApiKeyForm";
+import { WeatherService, getCropPrices } from "@/services/weatherService";
 
 
 interface Message {
@@ -55,6 +56,8 @@ export default function FarmingChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   
   const [openrouterApiKey, setOpenrouterApiKey] = useState("");
+  const [openweatherApiKey, setOpenweatherApiKey] = useState("");
+  const [weatherService, setWeatherService] = useState<WeatherService | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const questionnaireQuestions = [
@@ -123,10 +126,14 @@ export default function FarmingChatbot() {
   }, [messages]);
 
   useEffect(() => {
-    // Check for saved API key on component mount
-    const savedApiKey = localStorage.getItem('openrouter_api_key');
-    if (savedApiKey) {
-      setOpenrouterApiKey(savedApiKey);
+    // Check for saved API keys on component mount
+    const savedOpenrouterKey = localStorage.getItem('openrouter_api_key');
+    const savedOpenweatherKey = localStorage.getItem('openweather_api_key');
+    
+    if (savedOpenrouterKey && savedOpenweatherKey) {
+      setOpenrouterApiKey(savedOpenrouterKey);
+      setOpenweatherApiKey(savedOpenweatherKey);
+      setWeatherService(new WeatherService(savedOpenweatherKey));
       setCurrentStep("welcome");
     }
   }, []);
@@ -135,6 +142,34 @@ export default function FarmingChatbot() {
     setIsLoading(true);
     
     try {
+      // Get live weather data and crop prices
+      let weatherData = '';
+      let cropPricesData = '';
+      
+      if (weatherService && profile.location) {
+        try {
+          const currentWeather = await weatherService.getCurrentWeather(profile.location);
+          const forecast = await weatherService.getForecast(profile.location);
+          
+          weatherData = `\n\nLIVE WEATHER DATA:
+Current conditions in ${currentWeather.location}:
+- Temperature: ${currentWeather.temperature}°C
+- Conditions: ${currentWeather.description}
+- Humidity: ${currentWeather.humidity}%
+- Wind: ${currentWeather.windSpeed} m/s
+- Precipitation: ${currentWeather.precipitation}mm
+
+5-Day Forecast:
+${forecast.map(day => `${day.date}: ${day.temperature.min}-${day.temperature.max}°C, ${day.description}, Rain: ${day.precipitation}mm`).join('\n')}`;
+        } catch (error) {
+          weatherData = '\n\nWeather data temporarily unavailable.';
+        }
+      }
+      
+      const cropPrices = getCropPrices();
+      cropPricesData = `\n\nCURRENT CROP PRICES:
+${cropPrices.map(crop => `${crop.crop}: $${crop.price} ${crop.unit} (${crop.trend === 'up' ? '↗' : crop.trend === 'down' ? '↘' : '→'} ${crop.change > 0 ? '+' : ''}${crop.change}%)`).join('\n')}`;
+      
       const systemPrompt = `You are an expert AI farming assistant helping farmers with their agricultural questions. 
       
 Farmer Profile:
@@ -147,8 +182,10 @@ Farmer Profile:
 - Soil Type: ${profile.soilType || 'Unknown'}
 - Planting Season: ${profile.plantingDate || 'Unknown'}
 - Irrigation Method: ${profile.irrigationType || 'Unknown'}
+${weatherData}
+${cropPricesData}
 
-Provide practical, actionable farming advice tailored to this farmer's specific situation. Be conversational, helpful, and focus on solutions. Keep responses concise but informative.`;
+Use this live weather and pricing data to provide practical, actionable farming advice. Reference current conditions and market prices when relevant. Be conversational and focus on solutions.`;
 
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -215,9 +252,13 @@ Provide practical, actionable farming advice tailored to this farmer's specific 
     }
   };
 
-  const handleApiKeySet = (apiKey: string) => {
-    setOpenrouterApiKey(apiKey);
-    localStorage.setItem('openrouter_api_key', apiKey);
+  const handleApiKeySet = (apiKeys: { openrouter: string; openweather: string }) => {
+    setOpenrouterApiKey(apiKeys.openrouter);
+    setOpenweatherApiKey(apiKeys.openweather);
+    setWeatherService(new WeatherService(apiKeys.openweather));
+    
+    localStorage.setItem('openrouter_api_key', apiKeys.openrouter);
+    localStorage.setItem('openweather_api_key', apiKeys.openweather);
     setCurrentStep("welcome");
   };
 
