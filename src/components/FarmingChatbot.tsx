@@ -202,7 +202,7 @@ IMPORTANT: Keep responses under 100 words. Be helpful but brief.`;
           'X-Title': 'AI Farming Assistant',
         },
         body: JSON.stringify({
-          model: 'openai/gpt-oss-20b:free',
+          model: 'openai/gpt-3.5-turbo-0613',
           messages: [
             {
               role: 'system',
@@ -328,7 +328,7 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
           'X-Title': 'AI Farming Assistant',
         },
         body: JSON.stringify({
-          model: 'openai/gpt-oss-20b:free',
+          model: 'openai/gpt-3.5-turbo-0613',
           messages: [
             {
               role: 'system',
