@@ -9,9 +9,9 @@ serve(async (req) => {
   try {
     const { message, farmerProfile } = await req.json()
     
-    const mistralApiKey = Deno.env.get('MISTRAL_API_KEY')
-    if (!mistralApiKey) {
-      throw new Error('Mistral API key not configured')
+    const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY')
+    if (!openrouterApiKey) {
+      throw new Error('OpenRouter API key not configured')
     }
 
     // Create context-aware system prompt based on farmer profile
@@ -27,14 +27,16 @@ Farmer Profile:
 
 Provide practical, actionable farming advice tailored to this farmer's specific situation. Be conversational, helpful, and focus on solutions. Keep responses concise but informative.`
 
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${mistralApiKey}`,
+        'Authorization': `Bearer ${openrouterApiKey}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://lovable.dev',
+        'X-Title': 'Farming Assistant',
       },
       body: JSON.stringify({
-        model: 'mistral-small-latest',
+        model: 'mistralai/mistral-7b-instruct',
         messages: [
           {
             role: 'system',
@@ -51,7 +53,7 @@ Provide practical, actionable farming advice tailored to this farmer's specific 
     })
 
     if (!response.ok) {
-      throw new Error(`Mistral API error: ${response.status}`)
+      throw new Error(`OpenRouter API error: ${response.status}`)
     }
 
     const data = await response.json()
@@ -68,7 +70,7 @@ Provide practical, actionable farming advice tailored to this farmer's specific 
     )
 
   } catch (error) {
-    console.error('Error in chat-with-mistral function:', error)
+    console.error('Error in chat-with-openrouter function:', error)
     return new Response(
       JSON.stringify({ 
         error: 'Failed to generate response',
