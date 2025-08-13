@@ -15,7 +15,7 @@ import cropsPatternBg from "@/assets/crops-pattern-bg.jpg";
 import farmingTexture from "@/assets/farming-texture.jpg";
 import ApiKeyForm from "./ApiKeyForm";
 import WeatherBubble from "./WeatherBubble";
-import SuggestionClouds from "./SuggestionClouds";
+import SuggestionBar from "./SuggestionBar";
 import { WeatherService, getCropPrices } from "@/services/weatherService";
 import { checkCropCompatibility, getRecommendedCrops, CompatibilityResult } from "@/services/cropCompatibility";
 
@@ -821,8 +821,6 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
     >
       <div className="absolute inset-0 bg-background/80"></div>
       <div className="relative z-10">
-        {/* Floating Suggestion Clouds */}
-        <SuggestionClouds onQuestionClick={handleSuggestedQuestionClick} />
 
         <div className="grid lg:grid-cols-4 min-h-screen">
           {/* Sidebar with farmer profile and suggestions */}
@@ -951,6 +949,9 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
+          
+          {/* Suggestion Bar above input */}
+          <SuggestionBar onQuestionClick={handleSuggestedQuestionClick} />
           
           <div className="border-t p-4">
             <div className="flex gap-2">
