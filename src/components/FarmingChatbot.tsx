@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, Sprout, Wheat, Tractor, Send, User, Bot, ArrowRight, Cloud, TrendingUp, AlertTriangle, CheckCircle } from "lucide-react";
+import TranslateButton from "./TranslateButton";
 import heroImage from "@/assets/farming-hero.jpg";
 import farmingBg from "@/assets/farming-bg.jpg";
 import cropsPatternBg from "@/assets/crops-pattern-bg.jpg";
@@ -27,6 +28,8 @@ interface Message {
   content: string;
   sender: "user" | "bot";
   timestamp: Date;
+  translatedContent?: string;
+  translatedLanguage?: 'tamil' | 'hindi';
 }
 
 interface FarmerProfile {
@@ -71,6 +74,7 @@ export default function FarmingChatbot() {
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [awaitingDetailResponse, setAwaitingDetailResponse] = useState(false);
   const [datasets, setDatasets] = useState<DatasetFile[]>([]);
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, { content: string; language: 'tamil' | 'hindi' }>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const questionnaireQuestions = [
@@ -1040,11 +1044,23 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-forest-green/80"></div>
               <div className="relative z-10">
-                <h1 className="text-xl font-semibold flex items-center gap-2">
-                  <Bot className="w-6 h-6" />
-                  AI Farming Assistant
-                </h1>
-                <p className="text-sm opacity-90">Ask me anything about farming - I'm here to help you grow!</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-xl font-semibold flex items-center gap-2">
+                      <Bot className="w-6 h-6" />
+                      AI Farming Assistant
+                    </h1>
+                    <p className="text-sm opacity-90">Ask me anything about farming - I'm here to help you grow!</p>
+                  </div>
+                  <TranslateButton
+                    text="AI Farming Assistant"
+                    onTranslate={(translatedText) => {
+                      // Handle header translation
+                    }}
+                    className="bg-white/20 hover:bg-white/30 text-white"
+                    variant="ghost"
+                  />
+                </div>
               </div>
             </div>
           
@@ -1055,24 +1071,46 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
                   key={message.id}
                   className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.sender === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2">
-                      {message.sender === "bot" && <Bot className="w-4 h-4 mt-1 flex-shrink-0" />}
-                      {message.sender === "user" && <User className="w-4 h-4 mt-1 flex-shrink-0" />}
-                      <div>
-                        <p className="text-sm">{message.content}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {message.timestamp.toLocaleTimeString()}
-                        </p>
+                    <div
+                      className={`max-w-[80%] rounded-lg p-3 ${
+                        message.sender === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {message.sender === "bot" && <Bot className="w-4 h-4 mt-1 flex-shrink-0" />}
+                        {message.sender === "user" && <User className="w-4 h-4 mt-1 flex-shrink-0" />}
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm flex-1">
+                              {translatedMessages[message.id]?.content || message.content}
+                            </p>
+                            <TranslateButton
+                              text={message.content}
+                              onTranslate={(translatedText, language) => {
+                                setTranslatedMessages(prev => ({
+                                  ...prev,
+                                  [message.id]: { content: translatedText, language }
+                                }));
+                              }}
+                              className={message.sender === "user" ? "text-white hover:text-white" : ""}
+                              variant="ghost"
+                            />
+                          </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <p className="text-xs opacity-70">
+                              {message.timestamp.toLocaleTimeString()}
+                            </p>
+                            {translatedMessages[message.id] && (
+                              <span className="text-xs opacity-70 bg-white/20 px-2 py-1 rounded">
+                                {translatedMessages[message.id].language === 'tamil' ? 'தமிழ்' : 'हिंदी'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
                 </div>
               ))}
               {isLoading && (

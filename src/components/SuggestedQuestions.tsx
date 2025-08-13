@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sprout, Droplets, Bug, TrendingUp, CloudRain, Wheat } from "lucide-react";
+import TranslateButton from "./TranslateButton";
 
 interface SuggestedQuestionsProps {
   onQuestionClick: (question: string) => void;
 }
 
 const SuggestedQuestions = ({ onQuestionClick }: SuggestedQuestionsProps) => {
+  const [translatedQuestions, setTranslatedQuestions] = useState<Record<number, string>>({});
+  
   const questions = [
     {
       icon: Sprout,
@@ -49,10 +53,19 @@ const SuggestedQuestions = ({ onQuestionClick }: SuggestedQuestionsProps) => {
   return (
     <Card className="border-2 border-primary/20 shadow-[var(--shadow-medium)] bg-gradient-to-br from-forest-green-light to-golden-wheat-light">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-primary text-lg">
-          <Sprout className="h-5 w-5" />
-          Quick Questions to Get Started
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-primary text-lg">
+            <Sprout className="h-5 w-5" />
+            Quick Questions to Get Started
+          </CardTitle>
+          <TranslateButton
+            text="Quick Questions to Get Started"
+            onTranslate={(translatedText) => {
+              // Update title translation if needed
+            }}
+            className="ml-2"
+          />
+        </div>
         <p className="text-sm text-muted-foreground">
           Click on any question below to get expert farming advice
         </p>
@@ -68,14 +81,25 @@ const SuggestedQuestions = ({ onQuestionClick }: SuggestedQuestionsProps) => {
                 className={`${question.gradient} text-white border-white/30 hover:border-white/50 hover:scale-105 transition-all duration-200 h-auto p-4 flex flex-col items-start gap-2 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-glow)]`}
                 onClick={() => onQuestionClick(question.text)}
               >
-                <div className="flex items-center gap-2 w-full">
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  <span className="text-xs bg-white/20 px-2 py-1 rounded">
-                    {question.category}
-                  </span>
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-xs bg-white/20 px-2 py-1 rounded">
+                      {question.category}
+                    </span>
+                  </div>
+                  <TranslateButton
+                    text={question.text}
+                    onTranslate={(translatedText) => {
+                      setTranslatedQuestions(prev => ({
+                        ...prev,
+                        [index]: translatedText
+                      }));
+                    }}
+                  />
                 </div>
                 <p className="text-left text-sm font-medium leading-relaxed">
-                  {question.text}
+                  {translatedQuestions[index] || question.text}
                 </p>
               </Button>
             );
