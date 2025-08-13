@@ -24,8 +24,24 @@ export default function ApiKeyForm({ onApiKeySet }: ApiKeyFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-forest-green-light via-background to-golden-wheat-light flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-medium">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+      {/* Innovative farming background with floating elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-forest-green via-primary to-golden-wheat"></div>
+      <div className="absolute inset-0 bg-[url('/src/assets/farming-texture.jpg')] bg-cover bg-center mix-blend-overlay opacity-20"></div>
+      
+      {/* Floating farming elements */}
+      <div className="absolute top-20 left-20 w-16 h-16 bg-golden-wheat rounded-full opacity-60 animate-float-1"></div>
+      <div className="absolute top-40 right-32 w-12 h-12 bg-earth-brown rounded-full opacity-50 animate-float-2"></div>
+      <div className="absolute bottom-32 left-32 w-20 h-20 bg-forest-green rounded-full opacity-40 animate-float-3"></div>
+      <div className="absolute bottom-20 right-20 w-14 h-14 bg-vibrant-orange rounded-full opacity-55 animate-float-1"></div>
+      
+      {/* Seed pattern overlay */}
+      <div className="absolute inset-0" style={{
+        backgroundImage: `radial-gradient(circle at 25% 25%, hsl(var(--golden-wheat) / 0.1) 2px, transparent 2px),
+                         radial-gradient(circle at 75% 75%, hsl(var(--earth-brown) / 0.1) 2px, transparent 2px)`,
+        backgroundSize: '60px 60px, 80px 80px'
+      }}></div>
+      <Card className="w-full max-w-md shadow-strong backdrop-blur-sm bg-white/95 dark:bg-card/95 border-2 border-white/20 relative z-10">
         <CardHeader className="text-center">
           <Key className="w-12 h-12 mx-auto mb-4 text-primary" />
           <CardTitle className="text-2xl">Setup AI Farming Assistant</CardTitle>

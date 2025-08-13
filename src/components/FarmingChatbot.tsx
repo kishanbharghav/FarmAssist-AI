@@ -125,7 +125,7 @@ export default function FarmingChatbot() {
       id: "irrigationType",
       question: "What type of irrigation do you use?",
       type: "radio",
-      options: ["Drip irrigation", "Sprinkler system", "Flood irrigation", "Rain-fed only", "Mixed methods", "No irrigation system"]
+      options: ["Drip irrigation", "Sprinkler irrigation", "Flood irrigation", "Rain-fed", "Mixed methods", "No irrigation system"]
     }
   ];
 
@@ -715,8 +715,27 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
     const currentQuestion = questionnaireQuestions[questionnaireStep];
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-forest-green-light p-4">
-        <div className="max-w-2xl mx-auto pt-20">
+      <div className="min-h-screen relative p-4 overflow-hidden">
+        {/* Innovative farming background with pattern overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-forest-green via-earth-brown to-golden-wheat"></div>
+        <div className="absolute inset-0 bg-[url('/src/assets/crops-pattern-bg.jpg')] bg-cover bg-center mix-blend-soft-light opacity-30"></div>
+        
+        {/* Animated crop growth pattern */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            radial-gradient(circle at 20% 80%, hsl(var(--forest-green) / 0.15) 3px, transparent 3px),
+            radial-gradient(circle at 80% 20%, hsl(var(--golden-wheat) / 0.15) 2px, transparent 2px),
+            radial-gradient(circle at 40% 40%, hsl(var(--earth-brown) / 0.1) 4px, transparent 4px)
+          `,
+          backgroundSize: '100px 100px, 60px 60px, 120px 120px',
+          animation: 'float-1 8s ease-in-out infinite'
+        }}></div>
+        
+        {/* Floating growth elements */}
+        <div className="absolute top-32 left-16 w-8 h-8 bg-golden-wheat/60 rounded-full animate-float-2"></div>
+        <div className="absolute top-64 right-24 w-6 h-6 bg-forest-green/50 rounded-full animate-float-3"></div>
+        <div className="absolute bottom-40 left-1/4 w-10 h-10 bg-earth-brown/40 rounded-full animate-float-1"></div>
+        <div className="max-w-2xl mx-auto pt-20 relative z-10">
           <div className="mb-8 text-center">
             <h2 className="text-3xl font-bold mb-2">Tell Us About Your Farm</h2>
             <p className="text-muted-foreground">
@@ -730,7 +749,7 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
             </div>
           </div>
           
-          <Card className="shadow-medium">
+          <Card className="shadow-strong backdrop-blur-sm bg-white/95 dark:bg-card/95 border-2 border-white/20">
             <CardHeader>
               <CardTitle className="text-xl">{currentQuestion.question}</CardTitle>
             </CardHeader>
