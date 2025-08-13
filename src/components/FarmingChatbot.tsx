@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, Sprout, Wheat, Tractor, Send, User, Bot, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/farming-hero.jpg";
+import ApiKeyForm from "./ApiKeyForm";
 
 interface Message {
   id: string;
@@ -42,12 +43,13 @@ const FARMING_RESPONSES = {
 };
 
 export default function FarmingChatbot() {
-  const [currentStep, setCurrentStep] = useState<"welcome" | "questionnaire" | "chat">("welcome");
+  const [currentStep, setCurrentStep] = useState<"apikey" | "welcome" | "questionnaire" | "chat">("apikey");
   const [questionnaireStep, setQuestionnaireStep] = useState(0);
   const [farmerProfile, setFarmerProfile] = useState<Partial<FarmerProfile>>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [mistralApiKey, setMistralApiKey] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const questionnaireQuestions = [
@@ -100,42 +102,76 @@ export default function FarmingChatbot() {
   const generateAIResponse = async (userMessage: string, profile: Partial<FarmerProfile>) => {
     setIsLoading(true);
     
-    // Simulate AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const lowerMessage = userMessage.toLowerCase();
-    let response = "";
-    
-    // Simple keyword-based responses (in a real app, you'd use actual AI models)
-    if (lowerMessage.includes("wheat") || lowerMessage.includes("grain")) {
-      response = FARMING_RESPONSES.crops.wheat;
-    } else if (lowerMessage.includes("corn") || lowerMessage.includes("maize")) {
-      response = FARMING_RESPONSES.crops.corn;
-    } else if (lowerMessage.includes("tomato")) {
-      response = FARMING_RESPONSES.crops.tomatoes;
-    } else if (lowerMessage.includes("pest") || lowerMessage.includes("bug") || lowerMessage.includes("insect")) {
-      response = FARMING_RESPONSES.pest;
-    } else if (lowerMessage.includes("weather") || lowerMessage.includes("rain") || lowerMessage.includes("drought")) {
-      response = FARMING_RESPONSES.weather;
-    } else if (lowerMessage.includes("soil") || lowerMessage.includes("fertilizer")) {
-      response = FARMING_RESPONSES.soil;
-    } else if (lowerMessage.includes("price") || lowerMessage.includes("market") || lowerMessage.includes("sell")) {
-      response = FARMING_RESPONSES.market;
-    } else {
-      response = FARMING_RESPONSES.default;
+    try {
+      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${mistralApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'mistral-small-latest',
+          messages: [
+            {
+              role: 'system',
+              content: `You are an expert AI farming assistant helping farmers with their agricultural questions. 
+              
+Farmer Profile:
+- Name: ${profile.name || 'Unknown'}
+- Farm Size: ${profile.farmSize || 'Unknown'}
+- Location: ${profile.location || 'Unknown'}
+- Experience: ${profile.experience || 'Unknown'}
+- Crops: ${profile.cropTypes?.join(', ') || 'Various'}
+- Main Challenges: ${profile.mainChallenges?.join(', ') || 'General farming'}
+
+Provide practical, actionable farming advice tailored to this farmer's specific situation. Be conversational, helpful, and focus on solutions. Keep responses concise but informative.`
+            },
+            {
+              role: 'user',
+              content: userMessage
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 500,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Mistral API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.choices[0]?.message?.content || 'I apologize, but I was unable to generate a response. Could you please try rephrasing your question?';
+      setIsLoading(false);
+      return aiResponse;
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      setIsLoading(false);
+      
+      // Fallback to basic responses if API fails
+      const lowerMessage = userMessage.toLowerCase();
+      let fallbackResponse = "";
+      
+      if (lowerMessage.includes("wheat") || lowerMessage.includes("grain")) {
+        fallbackResponse = FARMING_RESPONSES.crops.wheat;
+      } else if (lowerMessage.includes("corn") || lowerMessage.includes("maize")) {
+        fallbackResponse = FARMING_RESPONSES.crops.corn;
+      } else if (lowerMessage.includes("tomato")) {
+        fallbackResponse = FARMING_RESPONSES.crops.tomatoes;
+      } else if (lowerMessage.includes("pest") || lowerMessage.includes("bug") || lowerMessage.includes("insect")) {
+        fallbackResponse = FARMING_RESPONSES.pest;
+      } else if (lowerMessage.includes("weather") || lowerMessage.includes("rain") || lowerMessage.includes("drought")) {
+        fallbackResponse = FARMING_RESPONSES.weather;
+      } else if (lowerMessage.includes("soil") || lowerMessage.includes("fertilizer")) {
+        fallbackResponse = FARMING_RESPONSES.soil;
+      } else if (lowerMessage.includes("price") || lowerMessage.includes("market") || lowerMessage.includes("sell")) {
+        fallbackResponse = FARMING_RESPONSES.market;
+      } else {
+        fallbackResponse = FARMING_RESPONSES.default;
+      }
+      
+      return `I'm having trouble connecting to my AI brain right now, but here's some basic advice: ${fallbackResponse}`;
     }
-    
-    // Personalize response based on profile
-    if (profile.name) {
-      response = `${profile.name}, ${response}`;
-    }
-    
-    if (profile.cropTypes && profile.cropTypes.length > 0) {
-      response += ` Since you grow ${profile.cropTypes.join(", ")}, this advice is particularly relevant for your farming operation.`;
-    }
-    
-    setIsLoading(false);
-    return response;
   };
 
   const handleSendMessage = async () => {
@@ -204,6 +240,15 @@ export default function FarmingChatbot() {
     
     return suggestions;
   };
+
+  const handleApiKeySet = (apiKey: string) => {
+    setMistralApiKey(apiKey);
+    setCurrentStep("welcome");
+  };
+
+  if (currentStep === "apikey") {
+    return <ApiKeyForm onApiKeySet={handleApiKeySet} />;
+  }
 
   if (currentStep === "welcome") {
     return (
