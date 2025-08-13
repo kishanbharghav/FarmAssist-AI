@@ -8,10 +8,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { MessageCircle, Sprout, Wheat, Tractor, Send, User, Bot, ArrowRight, Cloud, TrendingUp } from "lucide-react";
+import { MessageCircle, Sprout, Wheat, Tractor, Send, User, Bot, ArrowRight, Cloud, TrendingUp, AlertTriangle, CheckCircle } from "lucide-react";
 import heroImage from "@/assets/farming-hero.jpg";
 import ApiKeyForm from "./ApiKeyForm";
 import { WeatherService, getCropPrices } from "@/services/weatherService";
+import { checkCropCompatibility, getRecommendedCrops, CompatibilityResult } from "@/services/cropCompatibility";
 
 
 interface Message {
@@ -58,6 +59,7 @@ export default function FarmingChatbot() {
   const [openrouterApiKey, setOpenrouterApiKey] = useState("");
   const [openweatherApiKey, setOpenweatherApiKey] = useState("");
   const [weatherService, setWeatherService] = useState<WeatherService | null>(null);
+  const [cropCompatibility, setCropCompatibility] = useState<CompatibilityResult[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const questionnaireQuestions = [
@@ -340,11 +342,34 @@ Use this live weather and pricing data to provide practical, actionable farming 
     }
   };
 
+  const validateCropCompatibility = () => {
+    if (!farmerProfile.cropTypes || !farmerProfile.soilType || !farmerProfile.irrigationType || !farmerProfile.location || !farmerProfile.plantingDate) {
+      return;
+    }
+
+    const results = farmerProfile.cropTypes.map(crop => 
+      checkCropCompatibility(
+        crop,
+        farmerProfile.soilType!,
+        farmerProfile.irrigationType!,
+        farmerProfile.location!,
+        farmerProfile.plantingDate!
+      )
+    );
+
+    setCropCompatibility(results);
+  };
+
   const handleInputChange = (field: string, value: string | string[]) => {
     setFarmerProfile(prev => ({
       ...prev,
       [field]: value
     }));
+    
+    // Validate crop compatibility when relevant fields change
+    if (['cropTypes', 'soilType', 'irrigationType', 'location', 'plantingDate'].includes(field)) {
+      setTimeout(validateCropCompatibility, 100);
+    }
   };
 
   const getSuggestionsBasedOnProfile = () => {
@@ -512,6 +537,77 @@ Use this live weather and pricing data to provide practical, actionable farming 
                       <span>{option}</span>
                     </Label>
                   ))}
+                </div>
+              )}
+              
+              {/* Show crop compatibility warnings */}
+              {cropCompatibility.length > 0 && (
+                <div className="space-y-3 mt-6">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Crop Compatibility Analysis
+                  </h4>
+                  {cropCompatibility.map((result, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className={`p-3 rounded-lg border ${
+                        result.compatible 
+                          ? 'bg-green-50 border-green-200 text-green-800' 
+                          : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          {result.compatible ? (
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                          )}
+                          <span className="font-medium">
+                            {farmerProfile.cropTypes?.[index]} - Score: {result.score}/100
+                          </span>
+                        </div>
+                        
+                        {result.issues.length > 0 && (
+                          <div className="space-y-2">
+                            {result.issues.map((issue, issueIndex) => (
+                              <div key={issueIndex} className="text-sm">
+                                <p className="font-medium">{issue.message}</p>
+                                <ul className="list-disc list-inside ml-2 text-xs opacity-80">
+                                  {issue.suggestions.map((suggestion, suggIndex) => (
+                                    <li key={suggIndex}>{suggestion}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {result.recommendedAlternatives.length > 0 && (
+                          <div className="mt-2 text-sm">
+                            <p className="font-medium">Recommended alternatives:</p>
+                            <p className="text-xs opacity-80">{result.recommendedAlternatives.join(', ')}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Show general crop recommendations */}
+                  {farmerProfile.soilType && farmerProfile.irrigationType && farmerProfile.location && farmerProfile.plantingDate && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h5 className="font-medium text-blue-800 mb-2">Recommended crops for your conditions:</h5>
+                      <div className="flex flex-wrap gap-1">
+                        {getRecommendedCrops(
+                          farmerProfile.soilType,
+                          farmerProfile.irrigationType,
+                          farmerProfile.location,
+                          farmerProfile.plantingDate
+                        ).map((crop) => (
+                          <Badge key={crop} variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                            {crop}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               
