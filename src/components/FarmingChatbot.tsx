@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, Sprout, Wheat, Tractor, Send, User, Bot, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/farming-hero.jpg";
-import ApiKeyForm from "./ApiKeyForm";
+
 
 interface Message {
   id: string;
@@ -43,13 +43,13 @@ const FARMING_RESPONSES = {
 };
 
 export default function FarmingChatbot() {
-  const [currentStep, setCurrentStep] = useState<"apikey" | "welcome" | "questionnaire" | "chat">("apikey");
+  const [currentStep, setCurrentStep] = useState<"welcome" | "questionnaire" | "chat">("welcome");
   const [questionnaireStep, setQuestionnaireStep] = useState(0);
   const [farmerProfile, setFarmerProfile] = useState<Partial<FarmerProfile>>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [mistralApiKey, setMistralApiKey] = useState("");
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const questionnaireQuestions = [
@@ -103,47 +103,21 @@ export default function FarmingChatbot() {
     setIsLoading(true);
     
     try {
-      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${mistralApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'mistral-small-latest',
-          messages: [
-            {
-              role: 'system',
-              content: `You are an expert AI farming assistant helping farmers with their agricultural questions. 
-              
-Farmer Profile:
-- Name: ${profile.name || 'Unknown'}
-- Farm Size: ${profile.farmSize || 'Unknown'}
-- Location: ${profile.location || 'Unknown'}
-- Experience: ${profile.experience || 'Unknown'}
-- Crops: ${profile.cropTypes?.join(', ') || 'Various'}
-- Main Challenges: ${profile.mainChallenges?.join(', ') || 'General farming'}
-
-Provide practical, actionable farming advice tailored to this farmer's specific situation. Be conversational, helpful, and focus on solutions. Keep responses concise but informative.`
-            },
-            {
-              role: 'user',
-              content: userMessage
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 500,
-        }),
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      const { data, error } = await supabase.functions.invoke('chat-with-mistral', {
+        body: {
+          message: userMessage,
+          farmerProfile: profile
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Mistral API error: ${response.status}`);
+      if (error) {
+        throw new Error(`Function error: ${error.message}`);
       }
 
-      const data = await response.json();
-      const aiResponse = data.choices[0]?.message?.content || 'I apologize, but I was unable to generate a response. Could you please try rephrasing your question?';
       setIsLoading(false);
-      return aiResponse;
+      return data.response || 'I apologize, but I was unable to generate a response. Could you please try rephrasing your question?';
     } catch (error) {
       console.error('Error getting AI response:', error);
       setIsLoading(false);
@@ -241,14 +215,7 @@ Provide practical, actionable farming advice tailored to this farmer's specific 
     return suggestions;
   };
 
-  const handleApiKeySet = (apiKey: string) => {
-    setMistralApiKey(apiKey);
-    setCurrentStep("welcome");
-  };
 
-  if (currentStep === "apikey") {
-    return <ApiKeyForm onApiKeySet={handleApiKeySet} />;
-  }
 
   if (currentStep === "welcome") {
     return (

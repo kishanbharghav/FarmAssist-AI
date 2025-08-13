@@ -24,19 +24,19 @@ export default function ApiKeyForm({ onApiKeySet }: ApiKeyFormProps) {
       <Card className="w-full max-w-md shadow-medium">
         <CardHeader className="text-center">
           <Key className="w-12 h-12 mx-auto mb-4 text-primary" />
-          <CardTitle className="text-2xl">Setup Mistral AI</CardTitle>
+          <CardTitle className="text-2xl">Setup OpenRouter AI</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Enter your Mistral API key to enable intelligent farming assistance
+            Enter your OpenRouter API key to enable intelligent farming assistance
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="api-key">Mistral API Key</Label>
+              <Label htmlFor="api-key">OpenRouter API Key</Label>
               <Input
                 id="api-key"
                 type="password"
-                placeholder="Enter your Mistral API key"
+                placeholder="Enter your OpenRouter API key"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 required
@@ -45,9 +45,9 @@ export default function ApiKeyForm({ onApiKeySet }: ApiKeyFormProps) {
             
             <div className="text-xs text-muted-foreground space-y-2">
               <p>
-                Don't have a Mistral API key?{" "}
+                Don't have an OpenRouter API key?{" "}
                 <a 
-                  href="https://console.mistral.ai/" 
+                  href="https://openrouter.ai/keys" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary hover:underline inline-flex items-center gap-1"
