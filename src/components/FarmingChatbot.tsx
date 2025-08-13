@@ -398,7 +398,18 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
     
     // Check if user is responding to "Would you like more detailed information?"
     if (awaitingDetailResponse) {
-      if (trimmedMessage.toLowerCase().includes('yes') || trimmedMessage.toLowerCase().includes('sure') || trimmedMessage.toLowerCase().includes('please')) {
+      const isPositiveResponse = trimmedMessage.toLowerCase().includes('yes') || 
+                                trimmedMessage.toLowerCase().includes('sure') || 
+                                trimmedMessage.toLowerCase().includes('please') ||
+                                trimmedMessage.toLowerCase().includes('ok') ||
+                                trimmedMessage.toLowerCase().includes('okay');
+      
+      const isNegativeResponse = trimmedMessage.toLowerCase().includes('no') || 
+                                trimmedMessage.toLowerCase().includes('nope') ||
+                                trimmedMessage.toLowerCase().includes('not really') ||
+                                trimmedMessage.toLowerCase().includes('skip');
+      
+      if (isPositiveResponse) {
         const userMessage: Message = {
           id: Date.now().toString(),
           content: trimmedMessage,
@@ -428,8 +439,8 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
         });
         
         return;
-      } else {
-        // User said no, just acknowledge and reset
+      } else if (isNegativeResponse) {
+        // User explicitly said no
         const userMessage: Message = {
           id: Date.now().toString(),
           content: trimmedMessage,
@@ -448,6 +459,11 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
         };
         setMessages(prev => [...prev, botMessage]);
         return;
+      } else {
+        // User asked a new question instead of responding to the detail prompt
+        // Reset the awaiting state and treat this as a new question
+        setAwaitingDetailResponse(false);
+        // Continue with normal message processing below
       }
     }
 
