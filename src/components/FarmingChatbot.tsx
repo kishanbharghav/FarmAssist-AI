@@ -16,8 +16,10 @@ import farmingTexture from "@/assets/farming-texture.jpg";
 import ApiKeyForm from "./ApiKeyForm";
 import WeatherBubble from "./WeatherBubble";
 import SuggestionBar from "./SuggestionBar";
+import DatasetUpload from "./DatasetUpload";
 import { WeatherService, getCropPrices } from "@/services/weatherService";
 import { checkCropCompatibility, getRecommendedCrops, CompatibilityResult } from "@/services/cropCompatibility";
+import { mlPredictionService, MLPrediction, DatasetFile } from "@/services/mlPredictionService";
 
 
 interface Message {
@@ -54,7 +56,7 @@ const FARMING_RESPONSES = {
 };
 
 export default function FarmingChatbot() {
-  const [currentStep, setCurrentStep] = useState<"apikey" | "welcome" | "questionnaire" | "chat">("apikey");
+  const [currentStep, setCurrentStep] = useState<"apikey" | "welcome" | "questionnaire" | "datasets" | "chat">("apikey");
   const [questionnaireStep, setQuestionnaireStep] = useState(0);
   const [farmerProfile, setFarmerProfile] = useState<Partial<FarmerProfile>>({});
   const [messages, setMessages] = useState<Message[]>([]);
@@ -67,6 +69,7 @@ export default function FarmingChatbot() {
   const [cropCompatibility, setCropCompatibility] = useState<CompatibilityResult[]>([]);
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [awaitingDetailResponse, setAwaitingDetailResponse] = useState(false);
+  const [datasets, setDatasets] = useState<DatasetFile[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const questionnaireQuestions = [
@@ -483,11 +486,70 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
     setInputMessage("");
     setLastUserMessage(trimmedMessage);
 
+    // Try ML prediction first if we have datasets
+    if (datasets.length > 0) {
+      try {
+        const mlPrediction = await mlPredictionService.makePrediction({
+          query: trimmedMessage,
+          farmerProfile,
+          datasets
+        });
+
+        if (mlPrediction) {
+          // We have an ML prediction, use it
+          let response = "";
+          
+          if (mlPrediction.type === 'yield') {
+            const pred = mlPrediction.prediction;
+            response = `🤖 **ML Prediction**: Based on your uploaded data, I predict a yield of **${pred.expected}** (confidence: ${Math.round(mlPrediction.confidence * 100)}%). Range: ${pred.range.min}-${pred.range.max}. ${mlPrediction.explanation}`;
+          } else if (mlPrediction.type === 'price') {
+            const pred = mlPrediction.prediction;
+            response = `📊 **ML Analysis**: Current average price is **$${pred.current_average}** with a ${pred.trend} trend (${pred.trend_strength}% strength). Predicted next month: **$${pred.predicted_next_month}**. ${mlPrediction.explanation}`;
+          }
+
+          // Add AI context to the ML prediction
+          const enhancedResponse = await generateAIResponse(
+            `Based on this ML prediction: ${response}. The user asked: "${trimmedMessage}". Provide additional context and advice.`,
+            farmerProfile
+          );
+
+          const combinedResponse = `${response}\n\n🧠 **AI Insights**: ${enhancedResponse}`;
+          
+          const botMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            content: combinedResponse.replace(/\*\*/g, ''),
+            sender: "bot",
+            timestamp: new Date()
+          };
+
+          setMessages(prev => [...prev, botMessage]);
+          
+          if (combinedResponse.includes("Would you like more detailed information")) {
+            setAwaitingDetailResponse(true);
+          }
+          return;
+        }
+      } catch (error) {
+        console.error('ML prediction error:', error);
+        // Fall through to regular AI response
+      }
+    }
+
+    // Regular AI response (no ML prediction available or failed)
     const response = await generateAIResponse(trimmedMessage, farmerProfile);
+    
+    // Add dataset insights if available
+    let finalResponse = response;
+    if (datasets.length > 0) {
+      const insights = mlPredictionService.generateDataInsights(datasets);
+      if (insights.length > 0) {
+        finalResponse += `\n\n📈 **Your Data Insights**: ${insights.slice(0, 2).join(' • ')}`;
+      }
+    }
     
     const botMessage: Message = {
       id: (Date.now() + 1).toString(),
-      content: response,
+      content: finalResponse,
       sender: "bot",
       timestamp: new Date()
     };
@@ -495,7 +557,7 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
     setMessages(prev => [...prev, botMessage]);
     
     // Set flag to await detail response if the response asks for more info
-    if (response.includes("Would you like more detailed information")) {
+    if (finalResponse.includes("Would you like more detailed information")) {
       setAwaitingDetailResponse(true);
     }
   };
@@ -504,16 +566,20 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
     if (questionnaireStep < questionnaireQuestions.length - 1) {
       setQuestionnaireStep(questionnaireStep + 1);
     } else {
-      setCurrentStep("chat");
-      // Initialize chat with welcome message
-      const welcomeMessage: Message = {
-        id: "welcome",
-        content: `Hello ${farmerProfile.name || "there"}! I'm your AI farming assistant. I'm here to help you with any farming questions or challenges you might have. Based on your profile, I see you're working with ${farmerProfile.cropTypes?.join(", ") || "various crops"}. How can I assist you today?`,
-        sender: "bot",
-        timestamp: new Date()
-      };
-      setMessages([welcomeMessage]);
+      setCurrentStep("datasets");
     }
+  };
+
+  const handleDatasetsComplete = () => {
+    setCurrentStep("chat");
+    // Initialize chat with welcome message
+    const welcomeMessage: Message = {
+      id: "welcome",
+      content: `Hello ${farmerProfile.name || "there"}! I'm your AI farming assistant enhanced with machine learning capabilities. ${datasets.length > 0 ? `I can see you've uploaded ${datasets.length} dataset(s) which I'll use for more accurate predictions and insights.` : 'Feel free to upload datasets later for enhanced predictions.'} Based on your profile, I see you're working with ${farmerProfile.cropTypes?.join(", ") || "various crops"}. How can I assist you today?`,
+      sender: "bot",
+      timestamp: new Date()
+    };
+    setMessages([welcomeMessage]);
   };
 
   const validateCropCompatibility = () => {
@@ -809,6 +875,42 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
     );
   }
 
+  if (currentStep === "datasets") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-forest-green-light p-4">
+        <div className="max-w-4xl mx-auto pt-20">
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-bold mb-2">Upload Your Farm Data</h2>
+            <p className="text-muted-foreground">
+              Upload CSV files with your farm data to get ML-powered predictions and insights
+            </p>
+          </div>
+          
+          <div className="space-y-6">
+            <DatasetUpload 
+              onDatasetsChange={setDatasets}
+              existingDatasets={datasets}
+            />
+            
+            <div className="text-center">
+              <Button 
+                variant="farming" 
+                size="lg"
+                onClick={handleDatasetsComplete}
+              >
+                {datasets.length > 0 ? `Continue with ${datasets.length} dataset(s)` : "Skip for now - Continue to Chat"}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              <p className="text-sm text-muted-foreground mt-2">
+                You can always upload datasets later from within the chat
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleSuggestedQuestionClick = (question: string) => {
     setInputMessage(question);
     handleSendMessage();
@@ -951,7 +1053,11 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
           </ScrollArea>
           
           {/* Suggestion Bar above input */}
-          <SuggestionBar onQuestionClick={handleSuggestedQuestionClick} />
+          <SuggestionBar 
+            onQuestionClick={handleSuggestedQuestionClick} 
+            hasDatasets={datasets.length > 0}
+            onUploadDatasets={() => setCurrentStep("datasets")}
+          />
           
           <div className="border-t p-4">
             <div className="flex gap-2">

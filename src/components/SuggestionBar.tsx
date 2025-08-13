@@ -1,13 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Sprout, Droplets, Bug, TrendingUp, CloudRain, Wheat, Sun, Wind } from "lucide-react";
+import { Sprout, Droplets, Bug, TrendingUp, CloudRain, Wheat, Sun, Wind, BarChart3, Database, Upload } from "lucide-react";
 
 interface SuggestionBarProps {
   onQuestionClick: (question: string) => void;
+  hasDatasets?: boolean;
+  onUploadDatasets?: () => void;
 }
 
-const SuggestionBar = ({ onQuestionClick }: SuggestionBarProps) => {
-  const suggestions = [
+const SuggestionBar = ({ onQuestionClick, hasDatasets = false, onUploadDatasets }: SuggestionBarProps) => {
+  const baseSuggestions = [
     { text: "Best crops for my climate?", icon: Sprout, color: "bg-green-500 hover:bg-green-600" },
     { text: "Watering schedule tips?", icon: Droplets, color: "bg-blue-500 hover:bg-blue-600" },
     { text: "Natural pest control?", icon: Bug, color: "bg-orange-500 hover:bg-orange-600" },
@@ -20,10 +22,34 @@ const SuggestionBar = ({ onQuestionClick }: SuggestionBarProps) => {
     { text: "Fertilizer recommendations?", icon: Wheat, color: "bg-pink-500 hover:bg-pink-600" },
   ];
 
+  const mlSuggestions = [
+    { text: "Predict my crop yield", icon: BarChart3, color: "bg-emerald-500 hover:bg-emerald-600" },
+    { text: "Forecast market prices", icon: TrendingUp, color: "bg-violet-500 hover:bg-violet-600" },
+    { text: "Analyze my farm data trends", icon: Database, color: "bg-slate-500 hover:bg-slate-600" },
+    { text: "What patterns do you see in my data?", icon: BarChart3, color: "bg-rose-500 hover:bg-rose-600" },
+  ];
+
+  const suggestions = hasDatasets ? [...mlSuggestions, ...baseSuggestions.slice(0, 6)] : baseSuggestions;
+
   return (
     <div className="border-t border-border/50 bg-muted/30 backdrop-blur-sm">
       <div className="p-3">
-        <p className="text-xs text-muted-foreground mb-2 font-medium">Quick Questions:</p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs text-muted-foreground font-medium">
+            {hasDatasets ? "ML-Enhanced Questions:" : "Quick Questions:"}
+          </p>
+          {!hasDatasets && onUploadDatasets && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs px-2 py-1 h-auto"
+              onClick={onUploadDatasets}
+            >
+              <Upload className="h-3 w-3 mr-1" />
+              Upload Data
+            </Button>
+          )}
+        </div>
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex space-x-2 pb-2">
             {suggestions.map((suggestion, index) => {
