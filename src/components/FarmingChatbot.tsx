@@ -218,7 +218,13 @@ Use this live weather and pricing data to provide practical, actionable farming 
       }
 
       const data = await response.json();
-      const aiResponse = data.choices[0]?.message?.content || 'I apologize, but I was unable to generate a response. Could you please try rephrasing your question?';
+      let aiResponse = data.choices[0]?.message?.content || "I apologize, but I was unable to generate a response. Could you please try rephrasing your question?";
+      
+      // Remove markdown formatting
+      aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '$1'); // Remove **bold**
+      aiResponse = aiResponse.replace(/\*(.*?)\*/g, '$1'); // Remove *italic*
+      aiResponse = aiResponse.replace(/__(.*?)__/g, '$1'); // Remove __underline__
+      aiResponse = aiResponse.replace(/`(.*?)`/g, '$1'); // Remove `code`
       
       setIsLoading(false);
       return aiResponse;
@@ -262,6 +268,31 @@ Use this live weather and pricing data to provide practical, actionable farming 
     setCurrentStep("welcome");
   };
 
+  const splitLongMessage = (message: string, maxLength: number = 200): string[] => {
+    if (message.length <= maxLength) return [message];
+    
+    const sentences = message.split(/[.!?]+/).filter(s => s.trim());
+    const chunks: string[] = [];
+    let currentChunk = "";
+    
+    for (const sentence of sentences) {
+      const sentenceWithPunctuation = sentence.trim() + ".";
+      
+      if ((currentChunk + sentenceWithPunctuation).length > maxLength && currentChunk) {
+        chunks.push(currentChunk.trim());
+        currentChunk = sentenceWithPunctuation;
+      } else {
+        currentChunk += (currentChunk ? " " : "") + sentenceWithPunctuation;
+      }
+    }
+    
+    if (currentChunk.trim()) {
+      chunks.push(currentChunk.trim());
+    }
+    
+    return chunks.length > 0 ? chunks : [message];
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -277,14 +308,20 @@ Use this live weather and pricing data to provide practical, actionable farming 
 
     const response = await generateAIResponse(inputMessage, farmerProfile);
     
-    const botMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      content: response,
-      sender: "bot",
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, botMessage]);
+    // Split long response into multiple messages
+    const messageParts = splitLongMessage(response);
+    
+    messageParts.forEach((part, index) => {
+      setTimeout(() => {
+        const botMessage: Message = {
+          id: `${Date.now()}_${index}`,
+          content: part,
+          sender: "bot",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botMessage]);
+      }, index * 1000); // 1 second delay between parts
+    });
   };
 
   const handleQuestionnaireNext = () => {
