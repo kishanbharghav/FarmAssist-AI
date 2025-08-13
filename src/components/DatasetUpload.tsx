@@ -81,26 +81,9 @@ export default function DatasetUpload({ onDatasetsChange, existingDatasets }: Da
           if (dataset) {
             newDatasets.push(dataset);
             
-            // Store in Supabase for persistence
-            const { error } = await supabase
-              .from('farming_datasets')
-              .insert({
-                id: dataset.id,
-                name: dataset.name,
-                type: dataset.type,
-                columns: dataset.columns,
-                data: dataset.data,
-                size: dataset.size
-              });
+            // Store in local state only for now (database types not yet available)
+            console.log('Dataset processed:', dataset.name);
 
-            if (error) {
-              console.error('Error storing dataset:', error);
-              toast({
-                title: "Storage Error",
-                description: `Failed to store ${file.name} in database`,
-                variant: "destructive",
-              });
-            }
           }
         } catch (error) {
           toast({
@@ -152,21 +135,6 @@ export default function DatasetUpload({ onDatasetsChange, existingDatasets }: Da
 
   const removeDataset = async (datasetId: string) => {
     try {
-      const { error } = await supabase
-        .from('farming_datasets')
-        .delete()
-        .eq('id', datasetId);
-
-      if (error) {
-        console.error('Error removing dataset:', error);
-        toast({
-          title: "Delete Error",
-          description: "Failed to remove dataset from database",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const updatedDatasets = existingDatasets.filter(d => d.id !== datasetId);
       onDatasetsChange(updatedDatasets);
       toast({

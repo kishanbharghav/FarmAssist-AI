@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      farming_datasets: {
+        Row: {
+          columns: string[]
+          created_at: string
+          data: Json
+          id: string
+          name: string
+          size: number
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          columns: string[]
+          created_at?: string
+          data: Json
+          id: string
+          name: string
+          size?: number
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          columns?: string[]
+          created_at?: string
+          data?: Json
+          id?: string
+          name?: string
+          size?: number
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,4 +1,4 @@
-import { pipeline, Pipeline } from "@huggingface/transformers";
+import { pipeline } from "@huggingface/transformers";
 
 interface DatasetFile {
   id: string;
@@ -26,8 +26,8 @@ interface PredictionRequest {
 }
 
 class MLPredictionService {
-  private textClassifier: Pipeline | null = null;
-  private textGenerator: Pipeline | null = null;
+  private textClassifier: any = null;
+  private textGenerator: any = null;
   private initialized = false;
 
   async initialize() {
