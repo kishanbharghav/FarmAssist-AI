@@ -24,6 +24,9 @@ Farmer Profile:
 - Experience: ${farmerProfile.experience || 'Unknown'}
 - Crops: ${farmerProfile.cropTypes?.join(', ') || 'Various'}
 - Main Challenges: ${farmerProfile.mainChallenges?.join(', ') || 'General farming'}
+- Soil Type: ${farmerProfile.soilType || 'Unknown'}
+- Planting Season: ${farmerProfile.plantingDate || 'Unknown'}
+- Irrigation Method: ${farmerProfile.irrigationType || 'Unknown'}
 
 Provide practical, actionable farming advice tailored to this farmer's specific situation. Be conversational, helpful, and focus on solutions. Keep responses concise but informative.`
 

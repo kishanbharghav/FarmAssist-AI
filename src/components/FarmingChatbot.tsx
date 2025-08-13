@@ -26,6 +26,9 @@ interface FarmerProfile {
   location: string;
   mainChallenges: string[];
   experience: string;
+  soilType: string;
+  plantingDate: string;
+  irrigationType: string;
 }
 
 const FARMING_RESPONSES = {
@@ -88,6 +91,24 @@ export default function FarmingChatbot() {
       question: "What are your main farming challenges?",
       type: "checkbox",
       options: ["Pest control", "Weather conditions", "Soil quality", "Market prices", "Water management", "Equipment"]
+    },
+    {
+      id: "soilType",
+      question: "What type of soil do you have?",
+      type: "radio",
+      options: ["Clay soil", "Sandy soil", "Loamy soil", "Silty soil", "Rocky soil", "Not sure"]
+    },
+    {
+      id: "plantingDate",
+      question: "When do you typically plant your crops?",
+      type: "text",
+      placeholder: "e.g., March-April, depends on monsoon, etc."
+    },
+    {
+      id: "irrigationType",
+      question: "What type of irrigation do you use?",
+      type: "radio",
+      options: ["Drip irrigation", "Sprinkler system", "Flood irrigation", "Rain-fed only", "Mixed methods", "No irrigation system"]
     }
   ];
 
