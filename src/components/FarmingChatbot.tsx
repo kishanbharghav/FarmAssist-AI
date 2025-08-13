@@ -60,6 +60,8 @@ export default function FarmingChatbot() {
   const [openweatherApiKey, setOpenweatherApiKey] = useState("");
   const [weatherService, setWeatherService] = useState<WeatherService | null>(null);
   const [cropCompatibility, setCropCompatibility] = useState<CompatibilityResult[]>([]);
+  const [lastUserMessage, setLastUserMessage] = useState("");
+  const [awaitingDetailResponse, setAwaitingDetailResponse] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const questionnaireQuestions = [
@@ -172,8 +174,8 @@ ${forecast.map(day => `${day.date}: ${day.temperature.min}-${day.temperature.max
       cropPricesData = `\n\nCURRENT CROP PRICES:
 ${cropPrices.map(crop => `${crop.crop}: $${crop.price} ${crop.unit} (${crop.trend === 'up' ? '↗' : crop.trend === 'down' ? '↘' : '→'} ${crop.change > 0 ? '+' : ''}${crop.change}%)`).join('\n')}`;
       
-      const systemPrompt = `You are an expert AI farming assistant helping farmers with their agricultural questions. 
-      
+      const systemPrompt = `You are an expert AI farming assistant. Provide CONCISE, practical answers (max 2-3 sentences). Focus on the most important advice first.
+
 Farmer Profile:
 - Name: ${profile.name || 'Unknown'}
 - Farm Size: ${profile.farmSize || 'Unknown'}
@@ -187,7 +189,9 @@ Farmer Profile:
 ${weatherData}
 ${cropPricesData}
 
-Use this live weather and pricing data to provide practical, actionable farming advice. Reference current conditions and market prices when relevant. Be conversational and focus on solutions.`;
+Give a SHORT, direct answer. End with: "Would you like more detailed information about this topic?"
+
+IMPORTANT: Keep responses under 100 words. Be helpful but brief.`;
 
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -210,7 +214,7 @@ Use this live weather and pricing data to provide practical, actionable farming 
             }
           ],
           temperature: 0.7,
-          max_tokens: 500,
+          max_tokens: 150,
         }),
       });
 
@@ -270,7 +274,99 @@ Use this live weather and pricing data to provide practical, actionable farming 
     setCurrentStep("welcome");
   };
 
-  const splitLongMessage = (message: string, maxLength: number = 200): string[] => {
+  const generateDetailedResponse = async (originalMessage: string, profile: Partial<FarmerProfile>) => {
+    setIsLoading(true);
+    
+    try {
+      // Get detailed weather and pricing data
+      let weatherData = '';
+      let cropPricesData = '';
+      
+      if (weatherService && profile.location) {
+        try {
+          const currentWeather = await weatherService.getCurrentWeather(profile.location);
+          const forecast = await weatherService.getForecast(profile.location);
+          
+          weatherData = `\n\nDETAILED WEATHER DATA:
+Current conditions in ${currentWeather.location}:
+- Temperature: ${currentWeather.temperature}°C
+- Conditions: ${currentWeather.description}
+- Humidity: ${currentWeather.humidity}%
+- Wind: ${currentWeather.windSpeed} m/s
+- Precipitation: ${currentWeather.precipitation}mm
+
+5-Day Forecast:
+${forecast.map(day => `${day.date}: ${day.temperature.min}-${day.temperature.max}°C, ${day.description}, Rain: ${day.precipitation}mm`).join('\n')}`;
+        } catch (error) {
+          weatherData = '\n\nWeather data temporarily unavailable.';
+        }
+      }
+      
+      const cropPrices = getCropPrices();
+      cropPricesData = `\n\nDETAILED CROP PRICES:
+${cropPrices.map(crop => `${crop.crop}: $${crop.price} ${crop.unit} (${crop.trend === 'up' ? '↗' : crop.trend === 'down' ? '↘' : '→'} ${crop.change > 0 ? '+' : ''}${crop.change}%)`).join('\n')}`;
+      
+      const detailedPrompt = `You are an expert AI farming assistant. Provide DETAILED, comprehensive information about: "${originalMessage}"
+
+Farmer Profile:
+- Name: ${profile.name || 'Unknown'}
+- Location: ${profile.location || 'Unknown'}
+- Crops: ${profile.cropTypes?.join(', ') || 'Various'}
+- Soil Type: ${profile.soilType || 'Unknown'}
+- Irrigation: ${profile.irrigationType || 'Unknown'}
+${weatherData}
+${cropPricesData}
+
+Provide detailed explanations, step-by-step guidance, specific recommendations, and reference the weather/pricing data when relevant. Be thorough and educational.`;
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openrouterApiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'AI Farming Assistant',
+        },
+        body: JSON.stringify({
+          model: 'deepseek/deepseek-chat-v3-0324:free',
+          messages: [
+            {
+              role: 'system',
+              content: detailedPrompt
+            },
+            {
+              role: 'user',
+              content: `Please provide detailed information about: ${originalMessage}`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 800,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenRouter API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      let aiResponse = data.choices[0]?.message?.content || "I apologize, but I was unable to generate a detailed response.";
+      
+      // Remove markdown formatting
+      aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '$1');
+      aiResponse = aiResponse.replace(/\*(.*?)\*/g, '$1');
+      aiResponse = aiResponse.replace(/__(.*?)__/g, '$1');
+      aiResponse = aiResponse.replace(/`(.*?)`/g, '$1');
+      
+      setIsLoading(false);
+      return aiResponse;
+    } catch (error) {
+      console.error('Error getting detailed response:', error);
+      setIsLoading(false);
+      return "I'm having trouble generating a detailed response right now. Please try again later.";
+    }
+  };
+
+  const splitLongMessage = (message: string, maxLength: number = 300): string[] => {
     if (message.length <= maxLength) return [message];
     
     const sentences = message.split(/[.!?]+/).filter(s => s.trim());
@@ -298,32 +394,89 @@ Use this live weather and pricing data to provide practical, actionable farming 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
+    const trimmedMessage = inputMessage.trim();
+    
+    // Check if user is responding to "Would you like more detailed information?"
+    if (awaitingDetailResponse) {
+      if (trimmedMessage.toLowerCase().includes('yes') || trimmedMessage.toLowerCase().includes('sure') || trimmedMessage.toLowerCase().includes('please')) {
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          content: trimmedMessage,
+          sender: "user",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, userMessage]);
+        setInputMessage("");
+        setAwaitingDetailResponse(false);
+
+        // Generate detailed response
+        const detailedResponse = await generateDetailedResponse(lastUserMessage, farmerProfile);
+        
+        // Split detailed response if needed
+        const messageParts = splitLongMessage(detailedResponse);
+        
+        messageParts.forEach((part, index) => {
+          setTimeout(() => {
+            const botMessage: Message = {
+              id: `${Date.now()}_detailed_${index}`,
+              content: part,
+              sender: "bot",
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, botMessage]);
+          }, index * 800);
+        });
+        
+        return;
+      } else {
+        // User said no, just acknowledge and reset
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          content: trimmedMessage,
+          sender: "user",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, userMessage]);
+        setInputMessage("");
+        setAwaitingDetailResponse(false);
+
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: "Got it! Feel free to ask me anything else about farming.",
+          sender: "bot",
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botMessage]);
+        return;
+      }
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: inputMessage,
+      content: trimmedMessage,
       sender: "user",
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
+    setLastUserMessage(trimmedMessage);
 
-    const response = await generateAIResponse(inputMessage, farmerProfile);
+    const response = await generateAIResponse(trimmedMessage, farmerProfile);
     
-    // Split long response into multiple messages
-    const messageParts = splitLongMessage(response);
+    const botMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      content: response,
+      sender: "bot",
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, botMessage]);
     
-    messageParts.forEach((part, index) => {
-      setTimeout(() => {
-        const botMessage: Message = {
-          id: `${Date.now()}_${index}`,
-          content: part,
-          sender: "bot",
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, botMessage]);
-      }, index * 1000); // 1 second delay between parts
-    });
+    // Set flag to await detail response if the response asks for more info
+    if (response.includes("Would you like more detailed information")) {
+      setAwaitingDetailResponse(true);
+    }
   };
 
   const handleQuestionnaireNext = () => {
