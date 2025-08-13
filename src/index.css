@@ -17,42 +17,48 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 140 60% 15%;
 
-    --primary: 140 60% 30%;
-    --primary-foreground: 35 20% 98%;
+    --primary: 140 65% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 35 40% 92%;
-    --secondary-foreground: 140 60% 15%;
+    --secondary: 45 90% 65%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 35 40% 92%;
-    --muted-foreground: 35 10% 45%;
+    --muted: 140 30% 95%;
+    --muted-foreground: 140 20% 40%;
 
-    --accent: 45 85% 55%;
-    --accent-foreground: 140 60% 15%;
+    --accent: 25 85% 60%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 35 20% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 35 30% 88%;
-    --input: 35 30% 88%;
-    --ring: 140 60% 30%;
+    --border: 140 30% 85%;
+    --input: 140 20% 94%;
+    --ring: 140 65% 45%;
 
-    /* Custom farming theme colors */
-    --earth-brown: 25 45% 35%;
-    --earth-brown-light: 25 45% 85%;
-    --forest-green: 140 60% 25%;
-    --forest-green-light: 140 60% 90%;
-    --golden-wheat: 45 85% 55%;
-    --golden-wheat-light: 45 85% 95%;
+    /* Vibrant farming theme colors */
+    --earth-brown: 25 70% 50%;
+    --earth-brown-light: 25 50% 90%;
+    --forest-green: 140 70% 40%;
+    --forest-green-light: 140 50% 95%;
+    --golden-wheat: 45 95% 65%;
+    --golden-wheat-light: 45 80% 95%;
+    --vibrant-orange: 35 85% 65%;
+    --sky-blue: 200 80% 70%;
+    --fresh-mint: 160 60% 70%;
     
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--forest-green)));
+    /* Vibrant gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--forest-green)), hsl(var(--primary)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--golden-wheat)), hsl(var(--vibrant-orange)));
     --gradient-earth: linear-gradient(135deg, hsl(var(--earth-brown)), hsl(var(--golden-wheat)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--forest-green)) 0%, hsl(var(--primary)) 50%, hsl(var(--golden-wheat)) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(var(--forest-green)) 0%, hsl(var(--primary)) 30%, hsl(var(--golden-wheat)) 70%, hsl(var(--vibrant-orange)) 100%);
+    --gradient-weather: linear-gradient(135deg, hsl(var(--sky-blue)), hsl(var(--fresh-mint)));
     
-    /* Shadows */
-    --shadow-soft: 0 4px 20px hsl(var(--primary) / 0.1);
-    --shadow-medium: 0 8px 30px hsl(var(--forest-green) / 0.15);
-    --shadow-strong: 0 12px 40px hsl(var(--earth-brown) / 0.2);
+    /* Enhanced shadows */
+    --shadow-soft: 0 4px 20px hsl(var(--primary) / 0.15);
+    --shadow-medium: 0 8px 30px hsl(var(--forest-green) / 0.25);
+    --shadow-strong: 0 12px 40px hsl(var(--earth-brown) / 0.3);
+    --shadow-glow: 0 0 30px hsl(var(--golden-wheat) / 0.4);
 
     --radius: 0.5rem;
 

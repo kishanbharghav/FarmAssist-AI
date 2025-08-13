@@ -10,7 +10,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, Sprout, Wheat, Tractor, Send, User, Bot, ArrowRight, Cloud, TrendingUp, AlertTriangle, CheckCircle } from "lucide-react";
 import heroImage from "@/assets/farming-hero.jpg";
+import farmingBg from "@/assets/farming-bg.jpg";
+import cropsPatternBg from "@/assets/crops-pattern-bg.jpg";
+import farmingTexture from "@/assets/farming-texture.jpg";
 import ApiKeyForm from "./ApiKeyForm";
+import WeatherWidget from "./WeatherWidget";
+import SuggestedQuestions from "./SuggestedQuestions";
 import { WeatherService, getCropPrices } from "@/services/weatherService";
 import { checkCropCompatibility, getRecommendedCrops, CompatibilityResult } from "@/services/cropCompatibility";
 
@@ -804,73 +809,109 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
     );
   }
 
+  const handleSuggestedQuestionClick = (question: string) => {
+    setInputMessage(question);
+    handleSendMessage();
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="grid lg:grid-cols-4 h-screen">
-        {/* Sidebar with farmer profile and suggestions */}
-        <div className="lg:col-span-1 border-r bg-forest-green-light/30 p-4">
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Farmer Profile
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div>
-                  <strong>Name:</strong> {farmerProfile.name}
-                </div>
-                <div>
-                  <strong>Farm Size:</strong> {farmerProfile.farmSize}
-                </div>
-                <div>
-                  <strong>Location:</strong> {farmerProfile.location}
-                </div>
-                <div>
-                  <strong>Experience:</strong> {farmerProfile.experience}
-                </div>
-                {farmerProfile.cropTypes && farmerProfile.cropTypes.length > 0 && (
+    <div 
+      className="min-h-screen bg-background relative"
+      style={{ backgroundImage: `url(${farmingTexture})`, backgroundSize: 'cover', backgroundAttachment: 'fixed', backgroundPosition: 'center' }}
+    >
+      <div className="absolute inset-0 bg-background/80"></div>
+      <div className="relative z-10">
+        {/* Weather Section */}
+        <div className="p-4">
+          <WeatherWidget 
+            weatherService={weatherService} 
+            location={farmerProfile.location || ""}
+          />
+        </div>
+
+        {/* Suggested Questions Section */}
+        {messages.length === 0 && (
+          <div className="p-4 pt-0">
+            <SuggestedQuestions onQuestionClick={handleSuggestedQuestionClick} />
+          </div>
+        )}
+
+        <div className="grid lg:grid-cols-4 min-h-[calc(100vh-200px)]">
+          {/* Sidebar with farmer profile and suggestions */}
+          <div 
+            className="lg:col-span-1 border-r bg-forest-green-light/60 backdrop-blur-sm p-4"
+            style={{ backgroundImage: `url(${cropsPatternBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+          >
+            <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4">
+              <div className="space-y-4">
+                <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Farmer Profile
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
                   <div>
-                    <strong>Crops:</strong>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {farmerProfile.cropTypes.map((crop) => (
-                        <Badge key={crop} variant="secondary" className="text-xs">
-                          {crop}
-                        </Badge>
+                    <strong>Name:</strong> {farmerProfile.name}
+                  </div>
+                  <div>
+                    <strong>Farm Size:</strong> {farmerProfile.farmSize}
+                  </div>
+                  <div>
+                    <strong>Location:</strong> {farmerProfile.location}
+                  </div>
+                  <div>
+                    <strong>Experience:</strong> {farmerProfile.experience}
+                  </div>
+                  {farmerProfile.cropTypes && farmerProfile.cropTypes.length > 0 && (
+                    <div>
+                      <strong>Crops:</strong>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {farmerProfile.cropTypes.map((crop) => (
+                          <Badge key={crop} variant="secondary" className="text-xs">
+                            {crop}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Personalized Suggestions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {getSuggestionsBasedOnProfile().map((suggestion, index) => (
+                        <div key={index} className="text-sm p-2 bg-golden-wheat-light rounded">
+                          {suggestion}
+                        </div>
                       ))}
                     </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Personalized Suggestions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {getSuggestionsBasedOnProfile().map((suggestion, index) => (
-                    <div key={index} className="text-sm p-2 bg-golden-wheat-light rounded">
-                      {suggestion}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        {/* Chat interface */}
-        <div className="lg:col-span-3 flex flex-col">
-          <div className="border-b p-4 bg-primary text-primary-foreground">
-            <h1 className="text-xl font-semibold flex items-center gap-2">
-              <Bot className="w-6 h-6" />
-              AI Farming Assistant
-            </h1>
-            <p className="text-sm opacity-90">Ask me anything about farming!</p>
-          </div>
+          
+          {/* Chat interface */}
+          <div className="lg:col-span-3 flex flex-col bg-white/90 backdrop-blur-sm">
+            <div 
+              className="border-b p-4 bg-[var(--gradient-hero)] text-white relative overflow-hidden"
+              style={{ backgroundImage: `url(${farmingBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-forest-green/80"></div>
+              <div className="relative z-10">
+                <h1 className="text-xl font-semibold flex items-center gap-2">
+                  <Bot className="w-6 h-6" />
+                  AI Farming Assistant
+                </h1>
+                <p className="text-sm opacity-90">Ask me anything about farming - I'm here to help you grow!</p>
+              </div>
+            </div>
           
           <ScrollArea className="flex-1 p-4">
             <div className="space-y-4">
@@ -934,6 +975,7 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
                 <Send className="w-4 h-4" />
               </Button>
             </div>
+          </div>
           </div>
         </div>
       </div>
