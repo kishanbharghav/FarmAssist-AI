@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, Sprout, Wheat, Tractor, Send, User, Bot, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/farming-hero.jpg";
+import ApiKeyForm from "./ApiKeyForm";
 
 
 interface Message {
@@ -46,13 +47,14 @@ const FARMING_RESPONSES = {
 };
 
 export default function FarmingChatbot() {
-  const [currentStep, setCurrentStep] = useState<"welcome" | "questionnaire" | "chat">("welcome");
+  const [currentStep, setCurrentStep] = useState<"apikey" | "welcome" | "questionnaire" | "chat">("apikey");
   const [questionnaireStep, setQuestionnaireStep] = useState(0);
   const [farmerProfile, setFarmerProfile] = useState<Partial<FarmerProfile>>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
+  const [openrouterApiKey, setOpenrouterApiKey] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const questionnaireQuestions = [
@@ -120,25 +122,69 @@ export default function FarmingChatbot() {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // Check for saved API key on component mount
+    const savedApiKey = localStorage.getItem('openrouter_api_key');
+    if (savedApiKey) {
+      setOpenrouterApiKey(savedApiKey);
+      setCurrentStep("welcome");
+    }
+  }, []);
+
   const generateAIResponse = async (userMessage: string, profile: Partial<FarmerProfile>) => {
     setIsLoading(true);
     
     try {
-      const { supabase } = await import("@/integrations/supabase/client");
+      const systemPrompt = `You are an expert AI farming assistant helping farmers with their agricultural questions. 
       
-      const { data, error } = await supabase.functions.invoke('chat-with-mistral', {
-        body: {
-          message: userMessage,
-          farmerProfile: profile
-        }
+Farmer Profile:
+- Name: ${profile.name || 'Unknown'}
+- Farm Size: ${profile.farmSize || 'Unknown'}
+- Location: ${profile.location || 'Unknown'}
+- Experience: ${profile.experience || 'Unknown'}
+- Crops: ${profile.cropTypes?.join(', ') || 'Various'}
+- Main Challenges: ${profile.mainChallenges?.join(', ') || 'General farming'}
+- Soil Type: ${profile.soilType || 'Unknown'}
+- Planting Season: ${profile.plantingDate || 'Unknown'}
+- Irrigation Method: ${profile.irrigationType || 'Unknown'}
+
+Provide practical, actionable farming advice tailored to this farmer's specific situation. Be conversational, helpful, and focus on solutions. Keep responses concise but informative.`;
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openrouterApiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'AI Farming Assistant',
+        },
+        body: JSON.stringify({
+          model: 'deepseek/deepseek-chat-v3-0324:free',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: userMessage
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 500,
+        }),
       });
 
-      if (error) {
-        throw new Error(`Function error: ${error.message}`);
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`OpenRouter API error: ${response.status} - ${errorData}`);
       }
 
+      const data = await response.json();
+      const aiResponse = data.choices[0]?.message?.content || 'I apologize, but I was unable to generate a response. Could you please try rephrasing your question?';
+      
       setIsLoading(false);
-      return data.response || 'I apologize, but I was unable to generate a response. Could you please try rephrasing your question?';
+      return aiResponse;
     } catch (error) {
       console.error('Error getting AI response:', error);
       setIsLoading(false);
@@ -165,8 +211,14 @@ export default function FarmingChatbot() {
         fallbackResponse = FARMING_RESPONSES.default;
       }
       
-      return `I'm having trouble connecting to my AI brain right now, but here's some basic advice: ${fallbackResponse}`;
+      return `I'm having trouble connecting to OpenRouter right now, but here's some basic advice: ${fallbackResponse}`;
     }
+  };
+
+  const handleApiKeySet = (apiKey: string) => {
+    setOpenrouterApiKey(apiKey);
+    localStorage.setItem('openrouter_api_key', apiKey);
+    setCurrentStep("welcome");
   };
 
   const handleSendMessage = async () => {
@@ -236,6 +288,9 @@ export default function FarmingChatbot() {
     return suggestions;
   };
 
+  if (currentStep === "apikey") {
+    return <ApiKeyForm onApiKeySet={handleApiKeySet} />;
+  }
 
 
   if (currentStep === "welcome") {
