@@ -39,6 +39,7 @@ interface FarmerProfile {
   soilType: string;
   plantingDate: string;
   irrigationType: string;
+  customCrops?: string;
 }
 
 const FARMING_RESPONSES = {
@@ -89,7 +90,7 @@ export default function FarmingChatbot() {
       id: "cropTypes",
       question: "What crops do you grow?",
       type: "checkbox",
-      options: ["Wheat", "Corn", "Tomatoes", "Potatoes", "Soybeans", "Rice", "Other vegetables"]
+      options: ["Wheat", "Rice", "Corn", "Tomatoes", "Potatoes", "Soybeans", "Cotton", "Sugarcane", "Onions", "Turmeric", "Chickpeas", "Mustard", "Pearl Millet", "Eggplant", "Okra", "Other vegetables"]
     },
     {
       id: "location",
@@ -180,7 +181,7 @@ ${forecast.map(day => `${day.date}: ${day.temperature.min}-${day.temperature.max
       
       const cropPrices = getCropPrices();
       cropPricesData = `\n\nCURRENT CROP PRICES:
-${cropPrices.map(crop => `${crop.crop}: $${crop.price} ${crop.unit} (${crop.trend === 'up' ? '↗' : crop.trend === 'down' ? '↘' : '→'} ${crop.change > 0 ? '+' : ''}${crop.change}%)`).join('\n')}`;
+${cropPrices.map(crop => `${crop.crop}: ₹${crop.price} ${crop.unit} (${crop.trend === 'up' ? '↗' : crop.trend === 'down' ? '↘' : '→'} ${crop.change > 0 ? '+' : ''}${crop.change}%)`).join('\n')}`;
       
       const systemPrompt = `You are an expert AI farming assistant. Provide CONCISE, practical answers (max 2-3 sentences). Focus on the most important advice first.
 
@@ -312,7 +313,7 @@ ${forecast.map(day => `${day.date}: ${day.temperature.min}-${day.temperature.max
       
       const cropPrices = getCropPrices();
       cropPricesData = `\n\nDETAILED CROP PRICES:
-${cropPrices.map(crop => `${crop.crop}: $${crop.price} ${crop.unit} (${crop.trend === 'up' ? '↗' : crop.trend === 'down' ? '↘' : '→'} ${crop.change > 0 ? '+' : ''}${crop.change}%)`).join('\n')}`;
+${cropPrices.map(crop => `${crop.crop}: ₹${crop.price} ${crop.unit} (${crop.trend === 'up' ? '↗' : crop.trend === 'down' ? '↘' : '→'} ${crop.change > 0 ? '+' : ''}${crop.change}%)`).join('\n')}`;
       
       const detailedPrompt = `You are an expert AI farming assistant. Provide DETAILED, comprehensive information about: "${originalMessage}"
 
@@ -777,25 +778,46 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
               )}
               
               {currentQuestion.type === "checkbox" && (
-                <div className="grid grid-cols-2 gap-2">
-                  {currentQuestion.options?.map((option) => (
-                    <Label key={option} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={(farmerProfile[currentQuestion.id as keyof FarmerProfile] as string[] || []).includes(option)}
-                        onChange={(e) => {
-                          const currentValues = farmerProfile[currentQuestion.id as keyof FarmerProfile] as string[] || [];
-                          if (e.target.checked) {
-                            handleInputChange(currentQuestion.id, [...currentValues, option]);
-                          } else {
-                            handleInputChange(currentQuestion.id, currentValues.filter(v => v !== option));
-                          }
-                        }}
-                        className="rounded"
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    {currentQuestion.options?.map((option) => (
+                      <Label key={option} className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={(farmerProfile[currentQuestion.id as keyof FarmerProfile] as string[] || []).includes(option)}
+                          onChange={(e) => {
+                            const currentValues = farmerProfile[currentQuestion.id as keyof FarmerProfile] as string[] || [];
+                            if (e.target.checked) {
+                              handleInputChange(currentQuestion.id, [...currentValues, option]);
+                            } else {
+                              handleInputChange(currentQuestion.id, currentValues.filter(v => v !== option));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span>{option}</span>
+                      </Label>
+                    ))}
+                  </div>
+                  
+                  {/* Custom input for "Other vegetables" */}
+                  {currentQuestion.id === "cropTypes" && (farmerProfile.cropTypes as string[] || []).includes("Other vegetables") && (
+                    <div className="mt-4 p-4 bg-muted rounded-lg border">
+                      <Label htmlFor="custom-crops" className="text-sm font-medium mb-2 block">
+                        Please specify your other vegetables:
+                      </Label>
+                      <Input
+                        id="custom-crops"
+                        placeholder="e.g., Spinach, Cabbage, Cauliflower..."
+                        value={farmerProfile.customCrops as string || ""}
+                        onChange={(e) => handleInputChange("customCrops", e.target.value)}
+                        className="w-full"
                       />
-                      <span>{option}</span>
-                    </Label>
-                  ))}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Separate multiple crops with commas
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
               

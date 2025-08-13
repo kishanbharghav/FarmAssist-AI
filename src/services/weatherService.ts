@@ -124,56 +124,101 @@ export const getCropPrices = (): CropPrice[] => {
   return [
     {
       crop: 'Wheat',
-      price: 245.50,
+      price: 20350,
       unit: 'per ton',
-      currency: 'USD',
+      currency: 'INR',
       trend: 'up',
       change: 2.3,
       date: baseDate
     },
     {
       crop: 'Corn',
-      price: 178.25,
+      price: 18750,
       unit: 'per ton',
-      currency: 'USD',
+      currency: 'INR',
       trend: 'down',
       change: -1.2,
       date: baseDate
     },
     {
       crop: 'Soybeans',
-      price: 425.75,
+      price: 42500,
       unit: 'per ton',
-      currency: 'USD',
+      currency: 'INR',
       trend: 'up',
       change: 5.8,
       date: baseDate
     },
     {
-      crop: 'Rice',
-      price: 485.00,
+      crop: 'Rice (Basmati)',
+      price: 45000,
       unit: 'per ton',
-      currency: 'USD',
+      currency: 'INR',
       trend: 'stable',
       change: 0.5,
       date: baseDate
     },
     {
       crop: 'Tomatoes',
-      price: 1250.00,
+      price: 25000,
       unit: 'per ton',
-      currency: 'USD',
+      currency: 'INR',
       trend: 'up',
       change: 12.5,
       date: baseDate
     },
     {
       crop: 'Potatoes',
-      price: 320.00,
+      price: 18000,
       unit: 'per ton',
-      currency: 'USD',
+      currency: 'INR',
       trend: 'down',
       change: -3.2,
+      date: baseDate
+    },
+    {
+      crop: 'Cotton',
+      price: 62000,
+      unit: 'per ton',
+      currency: 'INR',
+      trend: 'up',
+      change: 3.5,
+      date: baseDate
+    },
+    {
+      crop: 'Sugarcane',
+      price: 3200,
+      unit: 'per ton',
+      currency: 'INR',
+      trend: 'stable',
+      change: 0.5,
+      date: baseDate
+    },
+    {
+      crop: 'Onions',
+      price: 15000,
+      unit: 'per ton',
+      currency: 'INR',
+      trend: 'down',
+      change: -8.2,
+      date: baseDate
+    },
+    {
+      crop: 'Turmeric',
+      price: 95000,
+      unit: 'per ton',
+      currency: 'INR',
+      trend: 'up',
+      change: 4.8,
+      date: baseDate
+    },
+    {
+      crop: 'Chickpeas',
+      price: 55000,
+      unit: 'per ton',
+      currency: 'INR',
+      trend: 'up',
+      change: 6.2,
       date: baseDate
     }
   ];

@@ -107,6 +107,127 @@ export const CROP_DATABASE: Record<string, CropRequirements> = {
     growingSeason: ['Spring', 'Fall', 'Winter'],
     commonIssues: ['aphids', 'downy mildew', 'tip burn'],
     alternatives: ['spinach', 'kale', 'chard']
+  },
+  // Indian staple crops
+  basmati_rice: {
+    name: 'Basmati Rice',
+    soilTypes: ['Clay soil', 'Clay loam', 'Alluvial soil'],
+    irrigationMethods: ['Flood irrigation', 'Paddy system', 'Continuous flooding'],
+    climateZones: ['subtropical', 'tropical', 'humid temperate'],
+    minTemperature: 20,
+    maxTemperature: 37,
+    waterRequirement: 'high',
+    growingSeason: ['Monsoon', 'Kharif'],
+    commonIssues: ['blast disease', 'stem borer', 'bacterial blight'],
+    alternatives: ['wheat', 'sugarcane', 'cotton']
+  },
+  sugarcane: {
+    name: 'Sugarcane',
+    soilTypes: ['Clay loam', 'Sandy loam', 'Alluvial soil'],
+    irrigationMethods: ['Flood irrigation', 'Drip irrigation', 'Furrow irrigation'],
+    climateZones: ['tropical', 'subtropical'],
+    minTemperature: 20,
+    maxTemperature: 38,
+    waterRequirement: 'high',
+    growingSeason: ['Year-round', 'Monsoon', 'Winter'],
+    commonIssues: ['red rot', 'smut', 'aphids'],
+    alternatives: ['cotton', 'maize', 'sorghum']
+  },
+  cotton: {
+    name: 'Cotton',
+    soilTypes: ['Black cotton soil', 'Clay loam', 'Sandy loam'],
+    irrigationMethods: ['Drip irrigation', 'Sprinkler irrigation', 'Flood irrigation'],
+    climateZones: ['semi-arid', 'subtropical', 'tropical'],
+    minTemperature: 15,
+    maxTemperature: 35,
+    waterRequirement: 'medium',
+    growingSeason: ['Kharif', 'Monsoon'],
+    commonIssues: ['bollworm', 'aphids', 'whitefly'],
+    alternatives: ['soybeans', 'sunflower', 'maize']
+  },
+  onions: {
+    name: 'Onions',
+    soilTypes: ['Sandy loam', 'Loamy soil', 'Clay loam'],
+    irrigationMethods: ['Drip irrigation', 'Sprinkler irrigation', 'Furrow irrigation'],
+    climateZones: ['temperate', 'subtropical', 'semi-arid'],
+    minTemperature: 10,
+    maxTemperature: 30,
+    waterRequirement: 'medium',
+    growingSeason: ['Rabi', 'Winter', 'Spring'],
+    commonIssues: ['purple blotch', 'thrips', 'neck rot'],
+    alternatives: ['garlic', 'shallots', 'leeks']
+  },
+  turmeric: {
+    name: 'Turmeric',
+    soilTypes: ['Sandy loam', 'Clay loam', 'Red soil'],
+    irrigationMethods: ['Drip irrigation', 'Sprinkler irrigation', 'Rain-fed'],
+    climateZones: ['tropical', 'subtropical'],
+    minTemperature: 20,
+    maxTemperature: 35,
+    waterRequirement: 'medium',
+    growingSeason: ['Monsoon', 'Kharif'],
+    commonIssues: ['rhizome rot', 'leaf spot', 'shoot borer'],
+    alternatives: ['ginger', 'cardamom', 'black pepper']
+  },
+  chickpeas: {
+    name: 'Chickpeas (Chana)',
+    soilTypes: ['Sandy loam', 'Clay loam', 'Black soil'],
+    irrigationMethods: ['Rain-fed', 'Sprinkler irrigation', 'Drip irrigation'],
+    climateZones: ['semi-arid', 'temperate', 'subtropical'],
+    minTemperature: 10,
+    maxTemperature: 30,
+    waterRequirement: 'low',
+    growingSeason: ['Rabi', 'Winter'],
+    commonIssues: ['wilt', 'pod borer', 'aphids'],
+    alternatives: ['lentils', 'field peas', 'black gram']
+  },
+  mustard: {
+    name: 'Mustard',
+    soilTypes: ['Sandy loam', 'Clay loam', 'Alluvial soil'],
+    irrigationMethods: ['Rain-fed', 'Sprinkler irrigation', 'Flood irrigation'],
+    climateZones: ['temperate', 'semi-arid', 'subtropical'],
+    minTemperature: 5,
+    maxTemperature: 25,
+    waterRequirement: 'low',
+    growingSeason: ['Rabi', 'Winter'],
+    commonIssues: ['aphids', 'white rust', 'alternaria blight'],
+    alternatives: ['sesame', 'sunflower', 'safflower']
+  },
+  millet: {
+    name: 'Pearl Millet (Bajra)',
+    soilTypes: ['Sandy soil', 'Sandy loam', 'Drought-prone soil'],
+    irrigationMethods: ['Rain-fed', 'Drip irrigation', 'Sprinkler irrigation'],
+    climateZones: ['arid', 'semi-arid', 'tropical'],
+    minTemperature: 20,
+    maxTemperature: 42,
+    waterRequirement: 'low',
+    growingSeason: ['Kharif', 'Monsoon'],
+    commonIssues: ['downy mildew', 'smut', 'shoot fly'],
+    alternatives: ['sorghum', 'maize', 'finger millet']
+  },
+  eggplant: {
+    name: 'Eggplant (Brinjal)',
+    soilTypes: ['Sandy loam', 'Clay loam', 'Red soil'],
+    irrigationMethods: ['Drip irrigation', 'Furrow irrigation', 'Sprinkler irrigation'],
+    climateZones: ['tropical', 'subtropical'],
+    minTemperature: 18,
+    maxTemperature: 32,
+    waterRequirement: 'medium',
+    growingSeason: ['Year-round', 'Kharif', 'Rabi'],
+    commonIssues: ['fruit borer', 'bacterial wilt', 'aphids'],
+    alternatives: ['tomatoes', 'peppers', 'okra']
+  },
+  okra: {
+    name: 'Okra (Bhindi)',
+    soilTypes: ['Sandy loam', 'Clay loam', 'Well-drained soil'],
+    irrigationMethods: ['Drip irrigation', 'Furrow irrigation', 'Rain-fed'],
+    climateZones: ['tropical', 'subtropical', 'warm temperate'],
+    minTemperature: 20,
+    maxTemperature: 35,
+    waterRequirement: 'medium',
+    growingSeason: ['Kharif', 'Summer', 'Monsoon'],
+    commonIssues: ['fruit borer', 'aphids', 'powdery mildew'],
+    alternatives: ['eggplant', 'tomatoes', 'peppers']
   }
 };
 
