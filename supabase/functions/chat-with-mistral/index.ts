@@ -8,9 +8,12 @@ serve(async (req) => {
 
   try {
     const { message, farmerProfile } = await req.json()
+    console.log('Received request:', { message, farmerProfile })
     
     const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY')
+    console.log('API key exists:', !!openrouterApiKey)
     if (!openrouterApiKey) {
+      console.error('OPENROUTER_API_KEY not found in environment')
       throw new Error('OpenRouter API key not configured')
     }
 
@@ -30,6 +33,7 @@ Farmer Profile:
 
 Provide practical, actionable farming advice tailored to this farmer's specific situation. Be conversational, helpful, and focus on solutions. Keep responses concise but informative.`
 
+    console.log('Making request to OpenRouter...')
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -54,12 +58,15 @@ Provide practical, actionable farming advice tailored to this farmer's specific 
         max_tokens: 500,
       }),
     })
-
+    
     if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`)
+      const errorText = await response.text()
+      console.error('OpenRouter API error:', response.status, errorText)
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
+    console.log('OpenRouter response:', data)
     const aiResponse = data.choices[0]?.message?.content || 'I apologize, but I was unable to generate a response. Could you please try rephrasing your question?'
 
     return new Response(
