@@ -587,18 +587,20 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
     setMessages([welcomeMessage]);
   };
 
-  const validateCropCompatibility = () => {
-    if (!farmerProfile.cropTypes || !farmerProfile.soilType || !farmerProfile.irrigationType || !farmerProfile.location || !farmerProfile.plantingDate) {
+  const validateCropCompatibility = (updatedProfile?: Partial<FarmerProfile>) => {
+    const profileToUse = updatedProfile || farmerProfile;
+    
+    if (!profileToUse.cropTypes || !profileToUse.soilType || !profileToUse.irrigationType || !profileToUse.location || !profileToUse.plantingDate) {
       return;
     }
 
-    const results = farmerProfile.cropTypes.map(crop => 
+    const results = profileToUse.cropTypes.map(crop => 
       checkCropCompatibility(
         crop,
-        farmerProfile.soilType!,
-        farmerProfile.irrigationType!,
-        farmerProfile.location!,
-        farmerProfile.plantingDate!
+        profileToUse.soilType!,
+        profileToUse.irrigationType!,
+        profileToUse.location!,
+        profileToUse.plantingDate!
       )
     );
 
@@ -606,14 +608,16 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
   };
 
   const handleInputChange = (field: string, value: string | string[]) => {
-    setFarmerProfile(prev => ({
-      ...prev,
+    const updatedProfile = {
+      ...farmerProfile,
       [field]: value
-    }));
+    };
     
-    // Validate crop compatibility when relevant fields change
+    setFarmerProfile(updatedProfile);
+    
+    // Validate crop compatibility when relevant fields change, using the updated profile
     if (['cropTypes', 'soilType', 'irrigationType', 'location', 'plantingDate'].includes(field)) {
-      setTimeout(validateCropCompatibility, 100);
+      validateCropCompatibility(updatedProfile);
     }
   };
 
@@ -754,12 +758,12 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
             </div>
           </div>
           
-          <Card className="shadow-strong backdrop-blur-sm bg-white/95 dark:bg-card/95 border-2 border-white/20">
+            <Card className="shadow-strong backdrop-blur-sm bg-white/95 dark:bg-card/95 border-2 border-white/20">
             <CardHeader>
               <CardTitle className="text-xl">{currentQuestion.question}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {currentQuestion.type === "text" && (
+               {currentQuestion.type === "text" && (
                 <Input
                   placeholder={currentQuestion.placeholder}
                   value={farmerProfile[currentQuestion.id as keyof FarmerProfile] as string || ""}
@@ -767,7 +771,7 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
                 />
               )}
               
-              {currentQuestion.type === "radio" && (
+               {currentQuestion.type === "radio" && (
                 <RadioGroup
                   value={farmerProfile[currentQuestion.id as keyof FarmerProfile] as string || ""}
                   onValueChange={(value) => handleInputChange(currentQuestion.id, value)}
@@ -781,7 +785,7 @@ Provide detailed explanations, step-by-step guidance, specific recommendations, 
                 </RadioGroup>
               )}
               
-              {currentQuestion.type === "checkbox" && (
+               {currentQuestion.type === "checkbox" && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-2">
                     {currentQuestion.options?.map((option) => (
