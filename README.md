@@ -29,14 +29,13 @@ It uses AI/ML models trained on agricultural datasets to provide **advice, sugge
 - **APIs:** Custom AI inference API + Weather & Agriculture datasets
 
 ---
-PROJECT STRUCTURE:
+
+## 📂 Project Structure
+
 farmassist-ai/
 ├── frontend/ # Next.js frontend code
 ├── backend/ # Node.js/Express API for AI/ML predictions
 ├── datasets/ # Agricultural datasets
 ├── models/ # Trained ML models for recommendations & predictions
 └── README.md # Project documentation
-
-
-## 📂 Project Structure
 
